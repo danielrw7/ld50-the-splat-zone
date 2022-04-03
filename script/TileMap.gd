@@ -9,6 +9,23 @@ export(NodePath) var select_path
 export(NodePath) var wrapper_path
 onready var select: ReferenceRect = get_node(select_path)
 onready var wrapper: Control = get_node(wrapper_path)
+onready var AttackMap: TileMap = get_node("../TileMapAttack")
+onready var Chars: Control = get_node("../../Chars")
+
+signal pause_play(is_paused)
+signal reset()
+func _on_MainMenu_start(reset):
+	paused = false
+	if reset:
+		emit_signal("reset")
+	emit_signal("pause_play", false)
+
+func _on_TileMapWrapper_game_over():
+	paused = true
+	emit_signal("pause_play", true)
+	select.visible = false
+
+var painting = true
 
 func _ready():
 	set_select_color()
@@ -19,6 +36,8 @@ func set_scale(new_scale):
 	# cell_size = new_scale
 	tilemap_scale = new_scale
 	scale = tilemap_scale / Vector2(24, 24)
+	AttackMap.scale = scale
+	Chars.rect_scale = tilemap_scale
 	set_sizes()
 
 func set_sizes():
@@ -26,12 +45,12 @@ func set_sizes():
 	select.rect_size = tilemap_scale
 	select.border_width = max(tilemap_scale.x / 6, 3)
 	var mouse_tile = tile_at_mouse()
-	place_select(mouse_tile)
+	if not paused:
+		place_select(mouse_tile)
 
 func tilemap_start_pos():
 	# var global_pos = get_global_transform()
 	var global_pos = global_position
-	# print(global_pos, tilemap_scale.x * tilemap_size.x)
 	return Vector2(global_pos.x, global_pos.y)
 
 func tile_at_global_pos(pos):
@@ -50,13 +69,16 @@ func tile_to_global_pos(tile):
 func tile_at_mouse():
 	return tile_at_global_pos(get_global_mouse_position())
 
-func place(tile: Vector2):
-	set_cellv(tile + tile_offset, selected_color)
-	wrapper.PlaceTile(int(tile.x), int(tile.y), selected_color)
+func place(tile: Vector2, color = null):
+	if color == null:
+		color = selected_color
+	set_cellv(tile + tile_offset, color)
+	wrapper.PlaceTile(int(tile.x), int(tile.y), color)
 
 var selecting = null
 var selected_color = 2
-var selected_color_options = [1, 2, 4]
+var last_selected_color = 2
+var selected_color_options = [1, 2, 4, 9]
 
 var colors = [
 	Color("#66420f"),
@@ -64,6 +86,11 @@ var colors = [
 	Color("#0000ff"),
 	Color("#000000"),
 	Color("#FF0000"),
+	Color("#000000"),
+	Color("#000000"),
+	Color("#000000"),
+	Color("#000000"),
+	Color("#0bf21e"),
 ]
 
 func place_all(mouse_tile):
@@ -81,10 +108,14 @@ func place_all(mouse_tile):
 func place_select(mouse_tile):
 	var is_selecting = selecting is Vector2
 	var mouse_in_bounds = mouse_tile is Vector2
+	if hideMouse:
+		Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
 	select.visible = true
 	if not is_selecting:
 		if not mouse_in_bounds:
 			select.visible = false
+			if hideMouse:
+				Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 			return
 		select.set_position(tile_to_global_pos(mouse_tile))
 		return
@@ -101,23 +132,72 @@ func set_select_color():
 	color.a = 0.5 if selecting else 0.25
 	select.set_color(color)
 
+export var paused = true
+
 func _input(event):
+	if Input.is_action_just_pressed("ui_pause"):
+		paused = !paused
+		if select.visible and paused:
+			select.visible = false
+		emit_signal("pause_play", paused)
+	if paused:
+		return
 	if event is InputEventMouseButton and event.pressed and (event.button_index == BUTTON_WHEEL_UP || event.button_index == BUTTON_WHEEL_DOWN):
 		var dir = 1
 		if event.button_index == BUTTON_WHEEL_DOWN:
 			dir = -1
 		var index = (selected_color_options.find(selected_color) + dir + selected_color_options.size()) % selected_color_options.size()
 		selected_color = selected_color_options[index]
+		if selected_color == 1:
+			index = (selected_color_options.find(selected_color) + dir + selected_color_options.size()) % selected_color_options.size()
+			selected_color = selected_color_options[index]
 		set_select_color()
 		return
+	if painting:
+		input_paint(event)
+	else:
+		input_rect(event)
+	if Input.is_action_just_released("toggle_mode"):
+		painting = !painting
+		selecting = false
+		set_select_color()
+		place_select(tile_at_mouse())
+
+var hideMouse = false
+var holdingRight = false
+var holdingLeft = false
+func input_paint(event):
+	if event is InputEventMouseButton and event.button_index == BUTTON_RIGHT:
+		holdingRight = event.pressed
+	if event is InputEventMouseButton and event.button_index == BUTTON_LEFT:
+		holdingLeft = event.pressed
+	if event is InputEventMouse:
+		var mouse_tile = tile_at_mouse()
+		place_select(mouse_tile)
+		if mouse_tile != null and holdingRight:
+			place(mouse_tile, 1)
+		if mouse_tile != null and holdingLeft:
+			place(mouse_tile, selected_color)
+	if event is InputEventMouseButton and event.pressed and event.button_index == BUTTON_MIDDLE:
+		var mouse_tile = tile_at_mouse()
+		if mouse_tile != null:
+			var color = get_cellv(mouse_tile + tile_offset)
+			if color and color != 1:
+				selected_color = color
+				set_select_color()
+
+func input_rect(event):
 	if event is InputEventMouseButton and event.pressed and event.button_index == BUTTON_RIGHT:
 		if selecting:
 			selecting = null
+			if selected_color == 1 and selected_color != last_selected_color:
+				selected_color = last_selected_color
 			set_select_color()
 			place_select(tile_at_mouse())
 			select.set_size(tilemap_scale)
 			return
 		if selected_color != 1:
+			last_selected_color = selected_color
 			selected_color = 1
 	if event is InputEventMouseButton and event.pressed:
 		if not select.visible:
@@ -126,6 +206,9 @@ func _input(event):
 		var mouse_tile = tile_at_mouse()
 		if is_selecting:
 			place_all(mouse_tile)
+			if selected_color == 1 and selected_color != last_selected_color:
+				selected_color = last_selected_color
+				set_select_color()
 		else:
 			selecting = mouse_tile
 			set_select_color()

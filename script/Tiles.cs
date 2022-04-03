@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 public enum Dir {Right = 0, Down = 1, Left = 2, Up = 3}
-public enum Color { Empty = 1, Blue = 2, Red = 4 }
+public enum Color { Empty = 1, Blue = 2, Red = 4, Green = 9 }
 
 public struct TileLocation
 {
@@ -57,6 +57,67 @@ public struct TileGoal
     public Color color;
 }
 
+public class TileAttack
+{
+    public TileLocation Location;
+    public int TicksLeft = 20;
+    public TileMap attackMap;
+    public TileMap map;
+
+    public int size = 4;
+
+    public void Start()
+    {
+        attackMap.Call("attack_count_inc");
+        Draw();
+    }
+    public void Done()
+    {
+        attackMap.Call("attack_count_dec");
+        Positions.ForEach(val => map.Call("place", val - Vector2.One, 1));
+        Draw(-1);
+    }
+    public void TickDecr()
+    {
+        TicksLeft--;
+    }
+
+    private List<Vector2>? _Positions;
+    public List<Vector2> Positions
+    {
+        get
+        {
+            if (_Positions != null) return _Positions;
+            _Positions = new List<Vector2> {};
+            for (var x = 0; x < size; x++)
+            {
+                for (var y = 0; y < size; y++)
+                _Positions.Add(Location.Pos + Vector2.Down * y + Vector2.Right * x);
+            }
+            return _Positions;
+        }
+    }
+
+    private DimensionsBox? _CollisionBox;
+    public DimensionsBox CollisionBox
+    {
+        get
+        {
+            _CollisionBox ??= DimensionsBox.FromTuple((Location.Pos, Location.Pos + new Vector2((float)size - 1, (float)size - 1)));
+            return (DimensionsBox)_CollisionBox;
+        }
+    }
+
+    public bool CollidesWith(TileAttack attack)
+    {
+        return CollisionBox.Intersects(attack.CollisionBox);
+    }
+    public void Draw(int tileID = 8)
+    {
+        Positions.ForEach(val => attackMap.SetCellv(val, tileID));
+    }
+}
+
 public class Tiles
 {
     public Color[,] Grid = new Color[21, 21];
@@ -73,7 +134,14 @@ public class Tiles
             },
             color = Color.Blue,
         },
+        new TileGoal {
+            Location = new TileLocation {
+                Pos = new Vector2(11, -1),
+            },
+            color = Color.Green,
+        },
     };
+    public List<TileAttack> Attacks = new List<TileAttack> {};
     public Vector2 Offset = Vector2.One;
 
     public Tiles()
@@ -91,6 +159,18 @@ public class Tiles
             }
         }
     }
+
+    public void Wipe(TileMap map)
+    {
+        for (var y = 0; y < 21; y++)
+        {
+            for (var x = 0; x < 21; x++)
+            {
+                if (Grid[x, y] != Color.Empty)
+                    map.SetCellv(new Vector2(x, y) + Offset, (int)Color.Empty);
+            }
+        }
+    }
 }
 
 public class Character
@@ -101,17 +181,15 @@ public class Character
         set
         {
             Pointing = (Location.Pos - value.Pos).ToDir();
-            // GD.Print(Location.Pos, value.Pos, Location.Pos - value.Pos, Pointing);
             _Location = value;
             _PotentialMoves = null;
             _Uncontested = null;
             _Wait = null;
-            // GD.Print("new location ", _Location);
             PositionEl();
             HasMoved = true;
         }
     }
-    public Node2D El { get; set; }
+    public Sprite El { get; set; }
     public bool HasMoved = false;
     public Dir Pointing = Dir.Down;
     public Color color;
@@ -120,15 +198,27 @@ public class Character
 
     public void PositionEl()
     {
-        if (!(El is Node2D))
+        if (!(El is Sprite))
             return;
-        El.Position = _Location.Pos + Vector2.One * 1.5F;
+        if (El.Position == Vector2.Zero)
+            El.Position = _Location.Pos + Vector2.One * 1.5F;
+        else
+        {
+            El.Call("set_next_pos", _Location.Pos + Vector2.One * 1.5F);
+        }
+        El.FlipH = false;
+        El.FlipV = false;
         if (Pointing == Dir.Up)
             El.RotationDegrees = 180F;
         if (Pointing == Dir.Right)
+        {
             El.RotationDegrees = -90F;
+        }
         if (Pointing == Dir.Left)
+        {
+            El.FlipH = true;
             El.RotationDegrees = 90F;
+        }
         if (Pointing == Dir.Down)
             El.RotationDegrees = 0F;
     }
@@ -150,7 +240,6 @@ public class Character
             Wrapper.TileStatus(pos + Vector2.Right.RotateSquare(Pointing)),
             // Wrapper.TileStatus(pos + Vector2.Up.RotateSquare(Pointing)),
         };
-        // GD.Print(pos, Pointing, Vector2.Down.RotateSquare(Pointing));
         if (rand.NextDouble() >= 0.5)
         {
             var tmp = _AllPotentialMoves[1];
@@ -239,7 +328,6 @@ public class Character
             {
                 _Uncontested = false;
                 // if (ID == 0)
-                //     GD.Print("best move or all potential null");
                 return (bool)_Uncontested;
             }
             var _best = (Tile)BestMove;
@@ -248,7 +336,6 @@ public class Character
             {
                 _Uncontested = false;
                 // if (ID == 0)
-                //     GD.Print("index is not 0");
                 return (bool)_Uncontested;
             }
             var adj = new List<Tile> {
@@ -259,7 +346,6 @@ public class Character
             };
             _Uncontested = adj.Where(val => !(val.character is null) && val.character != this && !val.character.HasMoved).Count() == 0;
             // if (ID == 0)
-            //     GD.Print("perfect");
             return (bool)_Uncontested;
         }
     }
@@ -320,16 +406,12 @@ public class Character
             if (!IsIdealMove) index += 32;
             else if (Uncontested)
             {
-                // GD.Print(this.ID, index, Uncontested, Wait);
                 index -= 8;
             }
             // else if (Wait) index += 16;
             // if (ID == 0)
-            //     GD.Print(ID, index, Uncontested, Wait);
             // if (ID == 1)
-            //     GD.Print(ID, index, Uncontested, Wait);
             // if (ID == 2)
-            //     GD.Print(ID, index, Uncontested, Wait);
             _ChoicePriority = index;
             return index;
         }

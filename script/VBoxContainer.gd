@@ -9,7 +9,7 @@ func _on_viewport_size_changed():
 	if resizing:
 		return
 	resizing = true
-	yield(get_tree().create_timer(0.5), "timeout")
+	# thinking emoji
 	resizing = false
 	set_size(OS.get_window_size())
 	var num_tiles = $HBoxContainer/TileMapWrapper/Control/TileMap.tilemap_size + $HBoxContainer/TileMapWrapper/Control/TileMap.tile_offset * 2

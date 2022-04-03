@@ -11,13 +11,13 @@ public class FPS : Godot.Label
 
     public override void _Ready()
     {
-        SetCheckingFPS(true);
+        SetCheckingFPS(false);
     }
 
     public bool checking = false;
     public void SetCheckingFPS(bool shouldCheck = true)
     {
-        Visible = shouldCheck;
+        // Visible = shouldCheck;
         if (shouldCheck && !checking) {
             checking = true;
             CheckFPS();

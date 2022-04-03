@@ -9,8 +9,63 @@ public class TileMapWrapper : Control
     // Declare member variables here. Examples:
     // private int a = 2;
     // private string b = "text";
-    public List<List<Character?>> Characters = new List<List<Character?>> {};
-    public Tiles TileColors = new Tiles {};
+    public List<List<Character?>> Characters;
+    public Tiles TileGrid;
+
+    [Export]
+    private NodePath AttackPath;
+
+    [Export]
+    private Texture TextureRed;
+    [Export]
+    private Texture TextureBlue;
+    [Export]
+    private Texture TextureGreen;
+
+    public void _on_TileMap_reset()
+    {
+        Reset();
+    }
+
+    public void Reset(bool hasSetup = true)
+    {
+        if (hasSetup)
+        {
+            foreach (var l in Characters)
+            {
+                foreach (var character in l)
+                {
+                    if (character is null)
+                        continue;
+                    character.El.QueueFree();
+                }
+            }
+            foreach (var attack in new List<TileAttack>(TileGrid.Attacks))
+            {
+                attack.Done();
+            }
+            TileGrid.Wipe((TileMap)GetNode("Control/TileMap"));
+        }
+
+        spawnRate = 2;
+        spawnCount = 2;
+        attackRate = 0;
+        attackCount = 0;
+
+        Characters = new List<List<Character?>> {};
+        TileGrid = new Tiles {};
+
+        // var map = (TileMap)GetNode("Control/TileMap");
+        // TileGrid.Load(map);
+
+        alive = 100 * 3;
+        alive = 999;
+        SpawnCounts = new ColorCounts {
+            red = alive / 3,
+            blue = alive / 3,
+            green = alive / 3,
+        };
+    }
 
     public Tile TileStatus(Vector2 pos)
     {
@@ -18,7 +73,7 @@ public class TileMapWrapper : Control
         var y = Mathf.FloorToInt(pos.y);
         Color _color = Color.Empty;
         try {
-            _color = TileColors.Grid[x, y];
+            _color = TileGrid.Grid[x, y];
         }
         catch {}
         var character = CharacterAt(x, y);
@@ -46,8 +101,6 @@ public class TileMapWrapper : Control
             Characters[y].Add(null);
         }
         Characters[y][x] = character;
-        // GD.Print("set char ", y, " ", x);
-        character.PositionEl();
         return character;
     }
 
@@ -86,7 +139,6 @@ public class TileMapWrapper : Control
         }
     }
 
-    public void PrintCharacters()
     {
         foreach (var l in Characters)
         {
@@ -94,7 +146,6 @@ public class TileMapWrapper : Control
             {
                 if (character is null)
                     continue;
-                GD.Print(character);
             }
         }
     }
@@ -116,13 +167,13 @@ public class TileMapWrapper : Control
 
     public void PlaceTile(int x, int y, Color color)
     {
-        TileColors.Grid[x, y] = color;
+        TileGrid.Grid[x, y] = color;
     }
 
     public Character Spawn(Vector2 pos, Color? color = null, Dir? pointing = null)
     {
-        Color _color = rand.NextDouble() < 0.5
-            ? Color.Red
+        Color _color = rand.NextDouble() < (2.0/3)
+            ? (rand.NextDouble() < 0.5 ? Color.Red : Color.Green)
             : Color.Blue;
         if (color != null)
             _color = (Color)color;
@@ -130,21 +181,35 @@ public class TileMapWrapper : Control
             ? (Dir)Math.Floor(rand.NextDouble()*4)
             : (Dir)pointing;
 
+        Texture texture;
         NodePath template;
         if (_color == Color.Red)
         {
-            template = "Chars/SpriteRed";
+            texture = TextureRed;
+            // template = "Chars/SpriteRed";
+            SpawnCounts.red--;
+        }
+        else if (_color == Color.Green)
+        {
+            texture = TextureGreen;
+            // template = "Chars/SpriteGreen";
+            SpawnCounts.green--;
         }
         else
         {
-            template = "Chars/SpriteBlue";
+            texture = TextureBlue;
+            // template = "Chars/SpriteBlue";
+            SpawnCounts.blue--;
         }
 
-        var el = (Sprite)GetNode(template).Duplicate();
+        var el = (Sprite)GetNode("Chars/Sprite").Duplicate();
         el.Visible = true;
+        el.Texture = texture;
         GetNode("Chars").AddChild(el);
 
-        return CharacterSet(new Character {
+        var ID = CharacterCount();
+
+        var character = CharacterSet(new Character {
             Wrapper = this,
             Location = new TileLocation {
                 Pos = pos,
@@ -152,8 +217,12 @@ public class TileMapWrapper : Control
             Pointing = _pointing,
             El = el,
             color = _color,
-            ID = CharacterCount(),
+            ID = ID,
         });
+
+        character.PositionEl();
+
+        return character;
     }
 
     public Random rand = new Random {};
@@ -175,27 +244,42 @@ public class TileMapWrapper : Control
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
-        TileColors.Load((TileMap)GetNode("Control/TileMap"));
+        Reset(false);
+
+        ((TileMap)GetNode("Control/TileMap")).Connect("pause_play", this, "PausePlay");
 
         // Spawn(new Vector2(10, 20), Color.Red, Dir.Up);
         // Spawn(new Vector2(10, 19), Color.Red, Dir.Up);
 
-        StartTicking();
+        // StartTicking();
     }
 
+    private bool paused = false;
+    public void PausePlay(bool _paused)
+    {
+        paused = _paused;
+
+        if (!paused && DoneTicking)
+            StartTicking();
+    }
+
+    private bool DoneTicking = true;
     public async void StartTicking()
     {
-        while (true)
+        Visible = true;
+        DoneTicking = false;
+        while (!paused)
         // for (var i = 0; i < 7; i++)
         {
-            await this.TimerAsync(0.5F);
             Tick();
-            // GD.Print("tick done ======================");
+            await this.TimerAsync(0.001F);
+            // await this.TimerAsync(0.6F);
             // if (CharacterCount() > 5)
             // {
             //     return;
             // }
         }
+        DoneTicking = true;
     }
 
     public void Move(Character character)
@@ -206,22 +290,138 @@ public class TileMapWrapper : Control
         CharacterMove(character, ((Tile)bestMove).Location);
     }
 
-    public int spawnRate = 2;
-    public int spawnCount = 2;
+    public int spawnRate;
+    public int spawnCount;
+
+    public int attackRate;
+    public int attackCount;
+
+    public bool CanPlaceAttack(TileAttack attack)
+    {
+        foreach (var other in TileGrid.Attacks)
+        {
+            if (other.CollidesWith(attack))
+                return false;
+        }
+        return true;
+    }
+
+    public int attackSize = 5;
+    public Vector2 RandAttackPos()
+    {
+        var offsetTop = attackSize - 2;
+        var offsetBottom = attackSize - 2;
+        var ySize = 22 - attackSize - offsetTop - offsetBottom;
+        return new Vector2((float)Math.Floor(1 + rand.NextDouble() * (22 - attackSize)), (float)Math.Floor(1 + offsetTop + rand.NextDouble() * ySize));
+        // return new Vector2(9F, 10F);
+    }
+
+    public TileAttack RandAttack()
+    {
+        return new TileAttack {
+            Location = new TileLocation {
+                Pos = RandAttackPos(),
+            },
+            attackMap = (TileMap)GetNode(AttackPath),
+            map = (TileMap)GetNode("Control/TileMap"),
+            size = attackSize,
+        };
+    }
+
+    public void AddAttack()
+    {
+        var existing = TileGrid.Attacks.Select(val => val.Location.Pos).ToList();
+        var attack = RandAttack();
+        var i = 0;
+        while (!CanPlaceAttack(attack))
+        {
+            i++;
+            if (i > 20)
+                return;
+            attack = RandAttack();
+        }
+        TileGrid.Attacks.Add(attack);
+        attack.Start();
+    }
+
+    public struct ColorCounts
+    {
+        public int red;
+        public int blue;
+        public int green;
+    }
+
+    public int alive;
+    public ColorCounts SpawnCounts;
+
+    public Color? NextSpawnColor()
+    {
+        var choices = new List<Color> {};
+        if (SpawnCounts.red > 0)
+            choices.Add(Color.Red);
+        if (SpawnCounts.blue > 0)
+            choices.Add(Color.Blue);
+        if (SpawnCounts.green > 0)
+            choices.Add(Color.Green);
+        if (choices.Count == 0)
+            return null;
+        return choices.OrderBy(val => rand.Next()).ToList()[0];
+    }
+
+    [Signal]
+    delegate void score();
+    [Signal]
+    delegate void death();
+    [Signal]
+    delegate void game_over();
 
     Character? character;
     public void Tick()
     {
-        foreach (var goal in TileColors.Goals)
+        if (attackRate == 0)
+            // attackRate = 1;
+            attackRate = 10 + attackSize * 2 + (int)Math.Floor((rand.NextDouble() - 0.5) * 5);
+
+        foreach (var goal in TileGrid.Goals)
         {
             var character = CharacterAt(goal.Location.Pos - Vector2.Up);
             if (character is null || character.color != goal.color)
                 continue;
             var x = Mathf.FloorToInt(character.Location.Pos.x);
             var y = Mathf.FloorToInt(character.Location.Pos.y);
-            character.El.QueueFree();
+            character.El.Call("score");
+            EmitSignal("score");
+            if (character.color == Color.Red)
+                SpawnCounts.red++;
+            if (character.color == Color.Blue)
+                SpawnCounts.blue++;
+            if (character.color == Color.Green)
+                SpawnCounts.green++;
             Characters[y][x] = null;
         }
+        var hasDeath = false;
+        foreach (var attack in new List<TileAttack>(TileGrid.Attacks))
+        {
+            attack.TickDecr();
+            if (attack.TicksLeft > 0)
+                continue;
+            var chars = attack.Positions.Select(val => CharacterAt(val - Vector2.One));
+            foreach (var character in chars)
+            {
+                if (character is null)
+                    continue;
+                var x = Mathf.FloorToInt(character.Location.Pos.x);
+                var y = Mathf.FloorToInt(character.Location.Pos.y);
+                character.El.Call("splat", character.color);
+                Characters[y][x] = null;
+                alive -= 1;
+                hasDeath = true;
+            }
+            attack.Done();
+            TileGrid.Attacks.Remove(attack);
+        }
+        if (hasDeath)
+            EmitSignal("death");
 
         var toMove = new List<Character> {};
         foreach (var row in Characters)
@@ -255,7 +455,6 @@ public class TileMapWrapper : Control
 
         // toMove.Sort((obj1, obj2) => obj1.ChoicePriority.CompareTo(obj2.ChoicePriority));
 
-        // GD.Print(toMove[0].ChoicePriority, toMove[0].El.GetPath(), toMove[1].ChoicePriority, toMove[1].El.GetPath());
 
         while (Now.Count > 0 || Later.Count > 0)
         {
@@ -290,23 +489,47 @@ public class TileMapWrapper : Control
             }
         }
 
-        // GD.Print("finished tick");
+
+        if (alive == 0)
+        {
+            Reset();
+            EmitSignal("game_over");
+        }
 
         if (spawnCount < spawnRate)
         {
             spawnCount++;
-            return;
         }
-        spawnCount = 0;
-
-        var spawnPos = new Vector2(10, 20);
-        var spawnLoc = new TileLocation {
-            Pos = spawnPos,
-        };
-        if (!TileStatus(spawnPos).empty)
+        else
         {
-            return;
+            spawnCount = 0;
+
+            var spawnPos = new Vector2(10, 21);
+            var spawnLoc = new TileLocation {
+                Pos = spawnPos,
+            };
+            if (!TileStatus(spawnPos).empty)
+            {
+                spawnCount = spawnRate;
+                return;
+            }
+            var color = NextSpawnColor();
+            if (color != null)
+                Spawn(spawnPos, color, Dir.Up);
         }
-        Spawn(spawnPos, null, Dir.Up);
+
+        if (attackCount < attackRate)
+        {
+            attackCount++;
+        }
+        else
+        {
+            attackRate = 0;
+            attackCount = 0;
+            AddAttack();
+        }
     }
+
+    [Export]
+    public int CharCount = 0;
 }
