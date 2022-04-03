@@ -1,0 +1,7 @@
+{
+    "editor.codeLens": false,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.renderWhitespace": "none",
+    "files.trimTrailingWhitespace": true
+}

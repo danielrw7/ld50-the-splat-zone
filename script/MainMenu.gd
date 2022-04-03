@@ -8,8 +8,7 @@ extends Control
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	pass # Replace with function body.
-
+	_on_FPSToggle_toggled(true)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 #func _process(delta):
@@ -28,3 +27,7 @@ func _on_Settings_Button_pressed():
 
 func _on_BackButton_pressed():
 	show_settings(false)
+
+signal ShowFPS(value)
+func _on_FPSToggle_toggled(button_pressed):
+	emit_signal("ShowFPS", button_pressed)
