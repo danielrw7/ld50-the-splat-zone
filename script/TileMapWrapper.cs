@@ -129,6 +129,9 @@ public class TileMapWrapper : Control
         character.Location = loc;
         Characters[y][x] = null;
         CharacterSet(character);
+        var newX = Mathf.FloorToInt(character.Location.Pos.x);
+        var newY = Mathf.FloorToInt(character.Location.Pos.y);
+        TileGrid.Paths[newX, newY]++;
         foreach (var pos in oldAdjacent)
         {
             var adjChar = CharacterAt(pos);
@@ -304,23 +307,31 @@ public class TileMapWrapper : Control
     }
 
     public int attackSize = 5;
-    public Vector2 RandAttackPos()
+    public Vector2 RandAttackPos(TileMap map, bool reset = false)
     {
+        var best = TileGrid.BestAttack(map, reset);
+        var bestVec = new Vector2(best.Item1, best.Item2);
+        bestVec -= new Vector2(2, 2);
+        bestVec += new Vector2((float)Math.Floor(rand.NextDouble() * 2), (float)Math.Floor(rand.NextDouble() * 2));
         var offsetTop = 0; // attackSize - 2;
         var offsetBottom = 0; // attackSize - 2;
-        var ySize = 22 - attackSize - offsetTop - offsetBottom;
-        return new Vector2((float)Math.Floor(1 + rand.NextDouble() * (22 - attackSize)), (float)Math.Floor(1 + offsetTop + rand.NextDouble() * ySize));
+        var ySize = 22 - attackSize - offsetBottom - 1;
+        bestVec.x = Mathf.Max(0, Mathf.Min(22 - attackSize - 1, bestVec.x));
+        bestVec.y = Mathf.Max(offsetTop, Mathf.Min(ySize, bestVec.y));
+        return bestVec + Vector2.One;
+        // return new Vector2((float)Math.Floor(1 + rand.NextDouble() * (22 - attackSize)), (float)Math.Floor(1 + offsetTop + rand.NextDouble() * ySize));
         // return new Vector2(9F, 10F);
     }
 
-    public TileAttack RandAttack()
+    public TileAttack RandAttack(bool reset = false)
     {
+        var map = (TileMap)GetNode("Control/TileMap");
         return new TileAttack {
             Location = new TileLocation {
-                Pos = RandAttackPos(),
+                Pos = RandAttackPos(map, reset),
             },
             attackMap = (TileMap)GetNode(AttackPath),
-            map = (TileMap)GetNode("Control/TileMap"),
+            map = map,
             size = attackSize,
         };
     }
@@ -328,16 +339,17 @@ public class TileMapWrapper : Control
     public void AddAttack()
     {
         var existing = TileGrid.Attacks.Select(val => val.Location.Pos).ToList();
-        var attack = RandAttack();
+        var attack = RandAttack(true);
         var i = 0;
         while (!CanPlaceAttack(attack))
         {
             i++;
-            if (i > 20)
+            if (i > 10)
                 return;
-            attack = RandAttack();
+            attack = RandAttack(false);
         }
         TileGrid.Attacks.Add(attack);
+        TileGrid.Paths = new int[21, 21];
         attack.Start();
     }
 

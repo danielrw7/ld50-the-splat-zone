@@ -121,6 +121,7 @@ public class TileAttack
 public class Tiles
 {
     public Color[,] Grid = new Color[21, 21];
+    public int[,] Paths = new int[21, 21];
     public List<TileGoal> Goals = new List<TileGoal> {
         new TileGoal {
             Location = new TileLocation {
@@ -170,6 +171,32 @@ public class Tiles
                     map.SetCellv(new Vector2(x, y) + Offset, (int)Color.Empty);
             }
         }
+    }
+
+    private Random rand = new Random {};
+    public (int, int)? _BestAttack = null;
+    public (int, int) BestAttack(TileMap map, bool reset = false)
+    {
+        if (!reset && _BestAttack != null) return ((int, int))_BestAttack;
+
+        var res = new List<(int, int, int)> {};
+
+        for (var y = 0; y < 21; y++)
+        {
+            for (var x = 0; x < 21; x++)
+            {
+                var mapVal = map.GetCellv(new Vector2(x, y) + Offset) != (int)Color.Empty ? 2 : 0;
+                var val = Paths[x, y] + 2 - (int)Math.Floor(rand.NextDouble() * 4);
+                if (y > 12 && x > 6 && x < 14)
+                    val -= 4;
+                res.Add((x, y, val));
+            }
+        }
+
+        res.Sort((val1, val2) => val2.Item3.CompareTo(val1.Item3));
+        var best = res.First();
+        _BestAttack = (best.Item1, best.Item2);
+        return ((int, int))_BestAttack;
     }
 }
 
