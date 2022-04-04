@@ -337,7 +337,8 @@ margin_bottom = 378.0
 rect_min_size = Vector2( 260, 0 )
 text = "How to Play:
 
-Save the bugs by guiding each across the table with their favorite condiments!
+Save the bugs by guiding each
+across the table with their favorite condiments!
 
 Dispense Condiment: Left Click
 (then Left Click again if in Rect. Mode)
