@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://script/Link.gd" type="Script" id=1]
+
+[node name="Link" type="Button"]
+margin_top = 327.0
+margin_right = 944.0
+margin_bottom = 350.0
+mouse_default_cursor_shape = 2
+text = "Test Open"
+flat = true
+script = ExtResource( 1 )
+
+[connection signal="pressed" from="." to="." method="_on_Button_pressed"]

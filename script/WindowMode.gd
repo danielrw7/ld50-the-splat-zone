@@ -11,6 +11,10 @@ func _on_MenuButton_window_selected(value):
 			OS.window_borderless = true
 			OS.window_maximized = true
 
+func _ready():
+	if OS.get_name() == "HTML5":
+		queue_free()
+
 func _on_VSyncToggle_toggled(button_pressed):
 	OS.vsync_enabled = button_pressed
 

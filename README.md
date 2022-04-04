@@ -1,1 +1,1 @@
-# ld50
+# LD50 - The Splat! Zone

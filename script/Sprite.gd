@@ -1,12 +1,15 @@
 extends Sprite
 
-export var speed = 7;
+export var move_speed = 6.5;
 var next_pos = Vector2.ZERO;
+
+func parent_speed(_speed):
+	move_speed = max(4.5 / _speed, 5)
 
 func _process(delta):
 	if (dead or position == next_pos or next_pos == Vector2.ZERO):
 		return
-	position += (next_pos - position) * delta * speed
+	position += (next_pos - position) * clamp(delta * move_speed, 0, 1)
 	var diff = next_pos - position
 	diff = Vector2(abs(diff.x), abs(diff.y))
 	if (diff.x < 0.05 and diff.y < 0.05):

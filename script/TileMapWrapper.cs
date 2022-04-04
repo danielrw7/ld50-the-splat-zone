@@ -58,13 +58,19 @@ public class TileMapWrapper : Control
         // var map = (TileMap)GetNode("Control/TileMap");
         // TileGrid.Load(map);
 
-        alive = 100 * 3;
-        alive = 999;
+        alive = 5 * 3;
         SpawnCounts = new ColorCounts {
             red = alive / 3,
             blue = alive / 3,
             green = alive / 3,
         };
+        AliveCounts = new ColorCounts {
+            red = alive / 3,
+            blue = alive / 3,
+            green = alive / 3,
+        };
+
+        EmitSignal("alive_count", AliveCounts.red, AliveCounts.blue, AliveCounts.green);
     }
 
     public Tile TileStatus(Vector2 pos)
@@ -139,17 +145,6 @@ public class TileMapWrapper : Control
         }
     }
 
-    {
-        foreach (var l in Characters)
-        {
-            foreach (var character in l)
-            {
-                if (character is null)
-                    continue;
-            }
-        }
-    }
-
     public int CharacterCount()
     {
         var res = 0;
@@ -205,6 +200,7 @@ public class TileMapWrapper : Control
         var el = (Sprite)GetNode("Chars/Sprite").Duplicate();
         el.Visible = true;
         el.Texture = texture;
+        el.Call("parent_speed", TimePerTick);
         GetNode("Chars").AddChild(el);
 
         var ID = CharacterCount();
@@ -263,21 +259,22 @@ public class TileMapWrapper : Control
             StartTicking();
     }
 
+    [Export]
+    private float TimePerTick = 0.6F;
+
     private bool DoneTicking = true;
     public async void StartTicking()
     {
         Visible = true;
         DoneTicking = false;
+        float? lastSpeed = null;
         while (!paused)
-        // for (var i = 0; i < 7; i++)
         {
-            Tick();
-            await this.TimerAsync(0.001F);
-            // await this.TimerAsync(0.6F);
-            // if (CharacterCount() > 5)
-            // {
-            //     return;
-            // }
+            var speedChanged = lastSpeed != TimePerTick;
+            if (speedChanged)
+                lastSpeed = TimePerTick;
+            Tick(speedChanged);
+            await this.TimerAsync(TimePerTick);
         }
         DoneTicking = true;
     }
@@ -309,8 +306,8 @@ public class TileMapWrapper : Control
     public int attackSize = 5;
     public Vector2 RandAttackPos()
     {
-        var offsetTop = attackSize - 2;
-        var offsetBottom = attackSize - 2;
+        var offsetTop = 0; // attackSize - 2;
+        var offsetBottom = 0; // attackSize - 2;
         var ySize = 22 - attackSize - offsetTop - offsetBottom;
         return new Vector2((float)Math.Floor(1 + rand.NextDouble() * (22 - attackSize)), (float)Math.Floor(1 + offsetTop + rand.NextDouble() * ySize));
         // return new Vector2(9F, 10F);
@@ -353,6 +350,7 @@ public class TileMapWrapper : Control
 
     public int alive;
     public ColorCounts SpawnCounts;
+    public ColorCounts AliveCounts;
 
     public Color? NextSpawnColor()
     {
@@ -371,12 +369,12 @@ public class TileMapWrapper : Control
     [Signal]
     delegate void score();
     [Signal]
-    delegate void death();
+    delegate void alive_count(int red, int blue, int green);
     [Signal]
     delegate void game_over();
 
     Character? character;
-    public void Tick()
+    public void Tick(bool speedChanged = false)
     {
         if (attackRate == 0)
             // attackRate = 1;
@@ -415,13 +413,19 @@ public class TileMapWrapper : Control
                 character.El.Call("splat", character.color);
                 Characters[y][x] = null;
                 alive -= 1;
+                if (character.color == Color.Red)
+                    AliveCounts.red--;
+                if (character.color == Color.Blue)
+                    AliveCounts.blue--;
+                if (character.color == Color.Green)
+                    AliveCounts.green--;
                 hasDeath = true;
             }
             attack.Done();
             TileGrid.Attacks.Remove(attack);
         }
         if (hasDeath)
-            EmitSignal("death");
+            EmitSignal("alive_count", AliveCounts.red, AliveCounts.blue, AliveCounts.green);
 
         var toMove = new List<Character> {};
         foreach (var row in Characters)
@@ -430,6 +434,8 @@ public class TileMapWrapper : Control
             {
                 if (character is null) continue;
                 character.HasMoved = false;
+                if (speedChanged)
+                    character.El.Call("parent_speed", TimePerTick);
             }
         }
         foreach (var row in Characters)

@@ -5,4 +5,4 @@ func _on_ExitButton_pressed():
 
 func _ready():
 	if OS.get_name() == "HTML5":
-		queue_free()
+		visible = false

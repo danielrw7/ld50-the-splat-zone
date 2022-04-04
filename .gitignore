@@ -8,3 +8,7 @@ export_presets.cfg
 .mono/
 data_*/
 export
+addons
+
+*scaled*
+.vscode/launch.json
