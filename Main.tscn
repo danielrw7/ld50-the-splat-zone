@@ -463,7 +463,7 @@ anims/Flash = ExtResource( 16 )
 anims/RESET = SubResource( 2 )
 
 [node name="TileMapAttack" type="TileMap" parent="VBoxContainer/HBoxContainer/TileMapWrapper/Control"]
-modulate = Color( 1, 1, 1, 0.152941 )
+modulate = Color( 1, 1, 1, 0 )
 material = SubResource( 3 )
 tile_set = SubResource( 1 )
 cell_size = Vector2( 24, 24 )

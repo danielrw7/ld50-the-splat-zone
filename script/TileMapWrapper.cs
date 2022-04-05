@@ -88,7 +88,7 @@ public class TileMapWrapper : Control
         // var map = (TileMap)GetNode("Control/TileMap");
         // TileGrid.Load(map);
 
-        alive = 1 * 3;
+        alive = 5 * 3;
         SpawnCounts = new ColorCounts {
             red = alive / 3,
             blue = alive / 3,
