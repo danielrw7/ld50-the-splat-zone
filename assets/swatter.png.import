@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/warning.png-50ffd86030d94e26126a07ff270848d8.stex"
+path="res://.import/swatter.png-fee14812bda008e68aeef4cfe53405d4.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/warning.png"
-dest_files=[ "res://.import/warning.png-50ffd86030d94e26126a07ff270848d8.stex" ]
+source_file="res://assets/swatter.png"
+dest_files=[ "res://.import/swatter.png-fee14812bda008e68aeef4cfe53405d4.stex" ]
 
 [params]
 

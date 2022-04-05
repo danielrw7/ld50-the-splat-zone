@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=2]
+[gd_scene load_steps=14 format=2]
 
 [ext_resource path="res://script/ExitButton.gd" type="Script" id=1]
 [ext_resource path="res://script/MainMenu.gd" type="Script" id=2]
@@ -9,18 +9,25 @@
 [ext_resource path="res://script/VSyncToggle.gd" type="Script" id=7]
 [ext_resource path="res://script/URLLabel.gd" type="Script" id=8]
 [ext_resource path="res://script/WindowMode.gd" type="Script" id=9]
+[ext_resource path="res://assets/VT323-Regular.ttf" type="DynamicFontData" id=10]
 
 [sub_resource type="Theme" id=1]
 VBoxContainer/constants/separation = 13
 
-[sub_resource type="ButtonGroup" id=2]
-resource_name = "WindowMode"
+[sub_resource type="DynamicFont" id=2]
+size = 48
+font_data = ExtResource( 10 )
+
+[sub_resource type="ButtonGroup" id=3]
 
 [node name="MainMenu" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme = ExtResource( 3 )
 script = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="Control" type="Control" parent="."]
 anchor_right = 1.0
@@ -33,6 +40,9 @@ margin_left = 40.0
 margin_top = 40.0
 margin_right = -40.0
 margin_bottom = -40.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="Main" type="VBoxContainer" parent="MarginContainer"]
 margin_right = 944.0
@@ -40,12 +50,20 @@ margin_bottom = 545.0
 theme = SubResource( 1 )
 alignment = 1
 
+[node name="Title" type="Label" parent="MarginContainer/Main"]
+margin_top = 158.0
+margin_right = 944.0
+margin_bottom = 207.0
+custom_fonts/font = SubResource( 2 )
+text = "THE SPLAT! ZONE"
+align = 1
+
 [node name="Sprite" type="Sprite" parent="MarginContainer/Main"]
 
 [node name="StartButton" type="Button" parent="MarginContainer/Main"]
-margin_top = 189.0
+margin_top = 220.0
 margin_right = 944.0
-margin_bottom = 212.0
+margin_bottom = 243.0
 mouse_default_cursor_shape = 2
 text = "Start"
 flat = true
@@ -60,25 +78,25 @@ text = "Restart"
 flat = true
 
 [node name="SettingsButton" type="Button" parent="MarginContainer/Main"]
-margin_top = 225.0
+margin_top = 256.0
 margin_right = 944.0
-margin_bottom = 248.0
+margin_bottom = 279.0
 mouse_default_cursor_shape = 2
 text = "Settings"
 flat = true
 
 [node name="ControlsButton" type="Button" parent="MarginContainer/Main"]
-margin_top = 261.0
+margin_top = 292.0
 margin_right = 944.0
-margin_bottom = 284.0
+margin_bottom = 315.0
 mouse_default_cursor_shape = 2
 text = "Controls"
 flat = true
 
 [node name="CreditsButton" type="Button" parent="MarginContainer/Main"]
-margin_top = 297.0
+margin_top = 328.0
 margin_right = 944.0
-margin_bottom = 320.0
+margin_bottom = 351.0
 mouse_default_cursor_shape = 2
 text = "Credits"
 flat = true
@@ -93,9 +111,9 @@ text = "Main Menu"
 flat = true
 
 [node name="ExitButton" type="Button" parent="MarginContainer/Main"]
-margin_top = 333.0
+margin_top = 364.0
 margin_right = 944.0
-margin_bottom = 356.0
+margin_bottom = 387.0
 mouse_default_cursor_shape = 2
 text = "Quit"
 flat = true
@@ -156,7 +174,7 @@ margin_top = 30.0
 margin_right = 944.0
 margin_bottom = 55.0
 mouse_default_cursor_shape = 2
-group = SubResource( 2 )
+group = SubResource( 3 )
 text = "Fullscreen"
 
 [node name="WindowedFullscreen" type="CheckBox" parent="MarginContainer/Settings/WindowMode"]
@@ -164,7 +182,7 @@ margin_top = 68.0
 margin_right = 944.0
 margin_bottom = 93.0
 mouse_default_cursor_shape = 2
-group = SubResource( 2 )
+group = SubResource( 3 )
 text = "Windowed Fullscreen"
 
 [node name="Windowed" type="CheckBox" parent="MarginContainer/Settings/WindowMode"]
@@ -173,7 +191,7 @@ margin_right = 944.0
 margin_bottom = 131.0
 mouse_default_cursor_shape = 2
 pressed = true
-group = SubResource( 2 )
+group = SubResource( 3 )
 text = "Windowed"
 
 [node name="VBoxContainer" type="HBoxContainer" parent="MarginContainer/Settings"]
@@ -193,55 +211,57 @@ margin_right = 940.0
 margin_bottom = 77.0
 size_flags_horizontal = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer"]
+[node name="All" type="HBoxContainer" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer"]
 margin_right = 894.0
 margin_bottom = 17.0
 
-[node name="Label" type="Label" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer/HBoxContainer"]
+[node name="Label" type="Label" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer/All"]
 margin_right = 36.0
 margin_bottom = 17.0
 text = "Master"
 
-[node name="HSlider" type="HSlider" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer/HBoxContainer"]
+[node name="HSlider" type="HSlider" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer/All"]
 margin_left = 40.0
 margin_right = 894.0
 margin_bottom = 16.0
 size_flags_horizontal = 3
-value = 100.0
+value = 50.0
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer"]
+[node name="Music" type="HBoxContainer" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer"]
 margin_top = 30.0
 margin_right = 894.0
 margin_bottom = 47.0
 
-[node name="Label" type="Label" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer/HBoxContainer2"]
+[node name="Label" type="Label" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer/Music"]
 margin_right = 30.0
 margin_bottom = 17.0
 text = "Music"
 
-[node name="HSlider" type="HSlider" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer/HBoxContainer2"]
+[node name="HSlider" type="HSlider" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer/Music"]
 margin_left = 34.0
 margin_right = 894.0
 margin_bottom = 16.0
 size_flags_horizontal = 3
 value = 100.0
 
-[node name="HBoxContainer3" type="HBoxContainer" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer"]
+[node name="Effects" type="HBoxContainer" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer"]
 margin_top = 60.0
 margin_right = 894.0
 margin_bottom = 77.0
 
-[node name="Label" type="Label" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer/HBoxContainer3"]
+[node name="Label" type="Label" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer/Effects"]
 margin_right = 42.0
 margin_bottom = 17.0
 text = "Effects"
 
-[node name="HSlider" type="HSlider" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer/HBoxContainer3"]
+[node name="HSlider" type="HSlider" parent="MarginContainer/Settings/VBoxContainer/VBoxContainer/Effects"]
 margin_left = 46.0
 margin_right = 894.0
 margin_bottom = 16.0
 size_flags_horizontal = 3
-value = 100.0
+max_value = 50.0
+value = 50.0
+rounded = true
 
 [node name="MarginContainer" type="MarginContainer" parent="MarginContainer/Settings/VBoxContainer"]
 margin_left = 944.0
@@ -256,9 +276,9 @@ theme = SubResource( 1 )
 alignment = 1
 
 [node name="Control" type="Control" parent="MarginContainer/Credits"]
-margin_top = 149.0
+margin_top = 119.0
 margin_right = 944.0
-margin_bottom = 191.0
+margin_bottom = 161.0
 rect_min_size = Vector2( 0, 42 )
 
 [node name="BackButton" type="Button" parent="MarginContainer/Credits/Control"]
@@ -273,15 +293,15 @@ align = 0
 script = ExtResource( 5 )
 
 [node name="Label" type="RichTextLabel" parent="MarginContainer/Credits"]
-margin_top = 204.0
+margin_top = 174.0
 margin_right = 944.0
-margin_bottom = 420.0
+margin_bottom = 426.0
 rect_min_size = Vector2( 260, 0 )
 custom_colors/default_color = Color( 0, 0, 0, 1 )
 bbcode_enabled = true
 bbcode_text = "Developed By:
 Danny W ([url]https://twitter.com/devpps[/url])
-for Ludum Dare 50
+for [url=https://ldjam.com/events/ludum-dare/50/]Ludum Dare 50[/url]
 
 Engine:
 [url=https://godotengine.org]Godot[/url]
@@ -290,7 +310,9 @@ Assets Used:
 Font: [url=https://fonts.google.com/specimen/VT323?category=Monospace]VT323 by Peter Hull[/url]
 
 Tools Used:
-[url=https://christinoleo.itch.io/google-fonts-explorer-for-godot]Google Fonts Explorer for Godot by Aknakos[/url]"
+[url=https://christinoleo.itch.io/google-fonts-explorer-for-godot]Google Fonts Explorer for Godot by Aknakos[/url]
+[url=https://github.com/tomeyro/godot-sfxr]GodotSfxr by tomeyro[/url]
+[url=https://jummbus.bitbucket.io]JummBox by Jummbus[/url]"
 text = "Developed By:
 Danny W (https://twitter.com/devpps)
 for Ludum Dare 50
@@ -302,7 +324,9 @@ Assets Used:
 Font: VT323 by Peter Hull
 
 Tools Used:
-Google Fonts Explorer for Godot by Aknakos"
+Google Fonts Explorer for Godot by Aknakos
+GodotSfxr by tomeyro
+JummBox by Jummbus"
 fit_content_height = true
 script = ExtResource( 8 )
 
@@ -314,9 +338,9 @@ theme = SubResource( 1 )
 alignment = 1
 
 [node name="Control" type="Control" parent="MarginContainer/Controls"]
-margin_top = 166.0
+margin_top = 66.0
 margin_right = 944.0
-margin_bottom = 208.0
+margin_bottom = 108.0
 rect_min_size = Vector2( 0, 42 )
 
 [node name="BackButton" type="Button" parent="MarginContainer/Controls/Control"]
@@ -331,14 +355,15 @@ align = 0
 script = ExtResource( 5 )
 
 [node name="Label" type="Label" parent="MarginContainer/Controls"]
-margin_top = 221.0
+margin_top = 121.0
 margin_right = 944.0
-margin_bottom = 378.0
+margin_bottom = 478.0
 rect_min_size = Vector2( 260, 0 )
 text = "How to Play:
 
-Save the bugs by guiding each
-across the table with their favorite condiments!
+Save your bug friends from certain death
+by guiding them across the table with their
+favorite condiments!
 
 Dispense Condiment: Left Click
 (then Left Click again if in Rect. Mode)
@@ -376,6 +401,9 @@ script = ExtResource( 6 )
 [connection signal="pressed" from="MarginContainer/Settings/WindowMode/Fullscreen" to="MarginContainer/Settings/WindowMode" method="_on_Fullscreen_pressed"]
 [connection signal="pressed" from="MarginContainer/Settings/WindowMode/WindowedFullscreen" to="MarginContainer/Settings/WindowMode" method="_on_Windowed_Fullscreen_pressed"]
 [connection signal="pressed" from="MarginContainer/Settings/WindowMode/Windowed" to="MarginContainer/Settings/WindowMode" method="_on_Windowed_pressed"]
+[connection signal="value_changed" from="MarginContainer/Settings/VBoxContainer/VBoxContainer/All/HSlider" to="." method="_on_HSlider_value_changed"]
+[connection signal="value_changed" from="MarginContainer/Settings/VBoxContainer/VBoxContainer/Music/HSlider" to="." method="_on_HSlider_value_changed"]
+[connection signal="value_changed" from="MarginContainer/Settings/VBoxContainer/VBoxContainer/Effects/HSlider" to="." method="_on_HSlider_value_changed"]
 [connection signal="pressed" from="MarginContainer/Credits/Control/BackButton" to="." method="_on_BackButton_pressed"]
 [connection signal="meta_clicked" from="MarginContainer/Credits/Label" to="MarginContainer/Credits/Label" method="_on_Label_meta_clicked"]
 [connection signal="pressed" from="MarginContainer/Controls/Control/BackButton" to="." method="_on_BackButton_pressed"]

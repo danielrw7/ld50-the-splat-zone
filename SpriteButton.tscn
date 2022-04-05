@@ -3,13 +3,16 @@
 [ext_resource path="res://script/ColorSelect.gd" type="Script" id=1]
 [ext_resource path="res://assets/yellow.png" type="Texture" id=2]
 
-[sub_resource type="StyleBoxEmpty" id=13]
+[sub_resource type="StyleBoxEmpty" id=1]
 
 [node name="SpriteButton" type="Control"]
 margin_right = 72.0
 margin_bottom = 72.0
 rect_min_size = Vector2( 72, 72 )
 script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="ReferenceRect" type="ReferenceRect" parent="."]
 margin_left = 3.0
@@ -17,7 +20,7 @@ margin_top = 3.0
 margin_right = 69.0
 margin_bottom = 69.0
 rect_min_size = Vector2( 66, 66 )
-border_color = Color( 0, 0, 0, 1 )
+border_color = Color( 0.443137, 0.45098, 0.529412, 1 )
 border_width = 6.0
 
 [node name="Button" type="ToolButton" parent="ReferenceRect"]
@@ -26,7 +29,7 @@ margin_top = -3.0
 margin_right = 75.0
 margin_bottom = 75.0
 mouse_default_cursor_shape = 2
-custom_styles/focus = SubResource( 13 )
+custom_styles/focus = SubResource( 1 )
 
 [node name="Sprite" type="Sprite" parent="ReferenceRect"]
 show_behind_parent = true

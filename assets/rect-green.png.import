@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/warning.png-50ffd86030d94e26126a07ff270848d8.stex"
+path="res://.import/rect-green.png-e76336557414046e5f3750e91393da6e.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/warning.png"
-dest_files=[ "res://.import/warning.png-50ffd86030d94e26126a07ff270848d8.stex" ]
+source_file="res://assets/rect-green.png"
+dest_files=[ "res://.import/rect-green.png-e76336557414046e5f3750e91393da6e.stex" ]
 
 [params]
 

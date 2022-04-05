@@ -11,8 +11,8 @@ tracks/0/loop_wrap = true
 tracks/0/imported = false
 tracks/0/enabled = true
 tracks/0/keys = {
-"times": PoolRealArray( 0, 0.7, 1.4, 1.8 ),
+"times": PoolRealArray( 0, 1, 1.5, 2.2 ),
 "transitions": PoolRealArray( 1, 1, 1, 1 ),
 "update": 0,
-"values": [ Color( 1, 1, 1, 0.152941 ), Color( 1, 1, 1, 0.564706 ), Color( 1, 1, 1, 0.564706 ), Color( 1, 1, 1, 0.152941 ) ]
+"values": [ Color( 1, 1, 1, 0.152941 ), Color( 1, 1, 1, 0.792157 ), Color( 1, 1, 1, 0.792157 ), Color( 1, 1, 1, 0.152941 ) ]
 }

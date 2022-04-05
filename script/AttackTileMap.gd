@@ -7,6 +7,7 @@ func set_flashing(should = true):
 		get_node("../AnimationPlayer").stop(true)
 	elif not flashing and should:
 		get_node("../AnimationPlayer").play("Flash")
+		get_node("../AnimationPlayer").seek(0)
 
 func _ready():
 	#place_future_attack(Vector2(10, 10))

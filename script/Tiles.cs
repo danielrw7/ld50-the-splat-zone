@@ -55,12 +55,26 @@ public struct TileGoal
 {
     public TileLocation Location;
     public Color color;
+
+    public void Draw(TileMap map)
+    {
+        if (color == Color.Red)
+            map.SetCellv(Location.Pos + Vector2.One, 5);
+        if (color == Color.Blue)
+            map.SetCellv(Location.Pos + Vector2.One, 6);
+        if (color == Color.Green)
+            map.SetCellv(Location.Pos + Vector2.One, 10);
+    }
+    public void Done(TileMap map)
+    {
+        map.SetCellv(Location.Pos + Vector2.One, -1);
+    }
 }
 
 public class TileAttack
 {
     public TileLocation Location;
-    public int TicksLeft = 20;
+    public int TicksLeft = 15;
     public TileMap attackMap;
     public TileMap map;
 
@@ -71,11 +85,13 @@ public class TileAttack
         attackMap.Call("attack_count_inc");
         Draw();
     }
-    public void Done()
+    public void Done(Control? swatter = null)
     {
         attackMap.Call("attack_count_dec");
         Positions.ForEach(val => map.Call("place", val - Vector2.One, 1));
         Draw(-1);
+        if (swatter != null)
+            swatter.Call("swat", Location.Pos);
     }
     public void TickDecr()
     {
@@ -112,9 +128,10 @@ public class TileAttack
     {
         return CollisionBox.Intersects(attack.CollisionBox);
     }
-    public void Draw(int tileID = 8)
+    public void Draw(int tileID = 11)
     {
-        Positions.ForEach(val => attackMap.SetCellv(val, tileID));
+        attackMap.SetCellv(Location.Pos, tileID);
+        // Positions.Skip(1).ToList().ForEach(val => attackMap.SetCellv(val, 8));
     }
 }
 
@@ -187,8 +204,8 @@ public class Tiles
             {
                 var mapVal = map.GetCellv(new Vector2(x, y) + Offset) != (int)Color.Empty ? 2 : 0;
                 var val = Paths[x, y] + 2 - (int)Math.Floor(rand.NextDouble() * 4);
-                if (y > 12 && x > 6 && x < 14)
-                    val -= 4;
+                if (y > 12 && x >= 6 && x <= 14)
+                    continue;
                 res.Add((x, y, val));
             }
         }

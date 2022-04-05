@@ -29,6 +29,8 @@ public class TileMapWrapper : Control
 
     public void Reset(bool hasSetup = true)
     {
+        var aboveMap = (TileMap)GetNode("Control/TileMapAbove");
+        MusicPlayer.Seek(0);
         if (hasSetup)
         {
             foreach (var l in Characters)
@@ -45,20 +47,48 @@ public class TileMapWrapper : Control
                 attack.Done();
             }
             TileGrid.Wipe((TileMap)GetNode("Control/TileMap"));
+            foreach (var goal in TileGrid.Goals)
+            {
+                goal.Done(aboveMap);
+            }
         }
 
+        numTicks = 0;
         spawnRate = 2;
         spawnCount = 2;
         attackRate = 0;
-        attackCount = 0;
+        attackCount = -20;
+
+        var goals = new List<TileGoal> {};
+        var goalColors = new List<Color> {
+            Color.Red,
+            Color.Blue,
+            Color.Green,
+        }.OrderBy(val => rand.Next()).ToList();
+        foreach (var color in goalColors)
+        {
+            var pos = new Vector2((int)Math.Floor(1 + rand.NextDouble() * 20), -1);
+            while (aboveMap.GetCellv(pos + Vector2.One) != -1)
+                pos = new Vector2((int)Math.Floor(1 + rand.NextDouble() * 20), -1);
+            var goal = new TileGoal {
+                Location = new TileLocation {
+                    Pos = pos,
+                },
+                color = color,
+            };
+            goal.Draw(aboveMap);
+            goals.Add(goal);
+        }
 
         Characters = new List<List<Character?>> {};
-        TileGrid = new Tiles {};
+        TileGrid = new Tiles {
+            Goals = goals,
+        };
 
         // var map = (TileMap)GetNode("Control/TileMap");
         // TileGrid.Load(map);
 
-        alive = 5 * 3;
+        alive = 1 * 3;
         SpawnCounts = new ColorCounts {
             red = alive / 3,
             blue = alive / 3,
@@ -243,6 +273,10 @@ public class TileMapWrapper : Control
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
+        MusicPlayer = (AudioStreamPlayer)GetNode(MusicPlayerPath);
+        ScorePlayer = (AudioStreamPlayer2D)GetNode(ScorePlayerPath);
+        MissPlayer = (AudioStreamPlayer2D)GetNode(MissPlayerPath);
+        HitPlayer = (AudioStreamPlayer2D)GetNode(HitPlayerPath);
         Reset(false);
 
         ((TileMap)GetNode("Control/TileMap")).Connect("pause_play", this, "PausePlay");
@@ -258,16 +292,36 @@ public class TileMapWrapper : Control
     {
         paused = _paused;
 
+        if (paused && !MusicPlayer.StreamPaused)
+            MusicPlayer.StreamPaused = true;
+
         if (!paused && DoneTicking)
             StartTicking();
     }
 
     [Export]
-    private float TimePerTick = 0.6F;
+    private float TimePerTick;
+    [Export]
+    private NodePath MusicPlayerPath;
+    [Export]
+    private NodePath ScorePlayerPath;
+    [Export]
+    private NodePath MissPlayerPath;
+    [Export]
+    private NodePath HitPlayerPath;
+
+    private AudioStreamPlayer MusicPlayer;
+    private AudioStreamPlayer2D ScorePlayer;
+    private AudioStreamPlayer2D MissPlayer;
+    private AudioStreamPlayer2D HitPlayer;
 
     private bool DoneTicking = true;
     public async void StartTicking()
     {
+        if (MusicPlayer.StreamPaused)
+            MusicPlayer.StreamPaused = false;
+        else
+            MusicPlayer.Play();
         Visible = true;
         DoneTicking = false;
         float? lastSpeed = null;
@@ -361,6 +415,7 @@ public class TileMapWrapper : Control
     }
 
     public int alive;
+    public int numTicks;
     public ColorCounts SpawnCounts;
     public ColorCounts AliveCounts;
 
@@ -388,15 +443,20 @@ public class TileMapWrapper : Control
     Character? character;
     public void Tick(bool speedChanged = false)
     {
+        numTicks++;
         if (attackRate == 0)
+        {
             // attackRate = 1;
-            attackRate = 10 + attackSize * 2 + (int)Math.Floor((rand.NextDouble() - 0.5) * 5);
+            attackRate = 5 + (int)(Math.Floor(Math.Max(0, Math.Min(5, (600.0 - numTicks) / 100)))) + attackSize * 2 + (int)Math.Floor((rand.NextDouble() - 0.5) * 5);
+        }
 
+        var hasScore = false;
         foreach (var goal in TileGrid.Goals)
         {
-            var character = CharacterAt(goal.Location.Pos - Vector2.Up);
+            var character = CharacterAt(goal.Location.Pos + Vector2.Down);
             if (character is null || character.color != goal.color)
                 continue;
+            hasScore = true;
             var x = Mathf.FloorToInt(character.Location.Pos.x);
             var y = Mathf.FloorToInt(character.Location.Pos.y);
             character.El.Call("score");
@@ -409,12 +469,20 @@ public class TileMapWrapper : Control
                 SpawnCounts.green++;
             Characters[y][x] = null;
         }
+
+        if (hasScore)
+        {
+            ScorePlayer.Play(0);
+        }
+
+        var hasAttack = false;
         var hasDeath = false;
         foreach (var attack in new List<TileAttack>(TileGrid.Attacks))
         {
             attack.TickDecr();
             if (attack.TicksLeft > 0)
                 continue;
+            hasAttack = true;
             var chars = attack.Positions.Select(val => CharacterAt(val - Vector2.One));
             foreach (var character in chars)
             {
@@ -433,11 +501,18 @@ public class TileMapWrapper : Control
                     AliveCounts.green--;
                 hasDeath = true;
             }
-            attack.Done();
+            attack.Done((Control)GetNode("Control/Swatter"));
             TileGrid.Attacks.Remove(attack);
         }
         if (hasDeath)
+        {
             EmitSignal("alive_count", AliveCounts.red, AliveCounts.blue, AliveCounts.green);
+            HitPlayer.Play();
+        }
+        else if (hasAttack)
+        {
+            MissPlayer.Play();
+        }
 
         var toMove = new List<Character> {};
         foreach (var row in Characters)

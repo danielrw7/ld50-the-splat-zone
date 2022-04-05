@@ -1,6 +1,6 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LD50", "LD50.csproj", "{F4C34055-F9C5-46F1-B431-5FCD5AE0FF44}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "The Splat! Zone", "The Splat! Zone.csproj", "{F4C34055-F9C5-46F1-B431-5FCD5AE0FF44}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

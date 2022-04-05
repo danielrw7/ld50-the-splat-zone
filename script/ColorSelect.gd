@@ -14,3 +14,7 @@ signal pressed()
 func _on_Button_pressed():
 	select(true)
 	emit_signal("pressed")
+
+func set_texture(_texture):
+	texture = _texture
+	$ReferenceRect/Sprite.texture = texture

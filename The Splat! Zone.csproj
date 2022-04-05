@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <TargetFramework>net472</TargetFramework>
-    <RootNamespace>LD50</RootNamespace>
+    <RootNamespace>TheSplat!Zone</RootNamespace>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>

@@ -13,10 +13,12 @@ onready var AttackMap: TileMap = get_node("../TileMapAttack")
 onready var AboveMap: TileMap = get_node("../TileMapAbove")
 onready var Chars: Control = get_node("../../Chars")
 onready var SelectColors: VBoxContainer = get_node("../../../SelectColors")
+onready var Swatter: Control = get_node("../Swatter")
 
 signal pause_play(is_paused)
 signal reset()
 signal select_mode(is_painting)
+signal select_color(color_index)
 func _on_MainMenu_start(reset):
 	paused = false
 	if reset:
@@ -43,6 +45,7 @@ func set_scale(new_scale):
 	AttackMap.scale = scale
 	AboveMap.scale = scale
 	Chars.rect_scale = tilemap_scale
+	Swatter.rect_scale = scale
 	#SelectColors.rect_scale = scale
 	set_sizes()
 
@@ -82,8 +85,8 @@ func place(tile: Vector2, color = null):
 	wrapper.PlaceTile(int(tile.x), int(tile.y), color)
 
 var selecting = null
-var selected_color = 2
-var last_selected_color = 2
+var selected_color = 4
+var last_selected_color = 4
 var selected_color_options = [1, 2, 4, 9]
 
 func selector_path_from_color(color):
@@ -109,6 +112,7 @@ func set_selected_color(color):
 		return
 	set_path_selected(last_selected_color, false)
 	set_path_selected(selected_color, true)
+	emit_signal("select_color", selected_color_options.find(selected_color))
 
 var colors = [
 	Color("#66420f"),
@@ -140,6 +144,7 @@ func place_select(mouse_tile):
 	var mouse_in_bounds = mouse_tile is Vector2
 	if hideMouse:
 		Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
+	select.set_size(tilemap_scale)
 	select.visible = true
 	if not is_selecting:
 		if not mouse_in_bounds:
